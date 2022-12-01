@@ -23,28 +23,3 @@ class Service:
 
     def delete_book(self, id):
         self.repository.delete_book(id)
-        
-    # def update_book(self, id, book_dto:BookDTO):
-    #     book = Book(book_dto.__dict__)
-    #     book_from_db = self.repository.get_book_by_id(id)
-    #     if book_dto.opinion:
-    #         if book_from_db.opinion_id:
-    #             self.repository.update_book(book, book_dto.opinion, book.opinion_id)
-    #         else: 
-    #             opinion_id_created = self.repository.create_opinion(book_dto.opinion)
-    #             book.opinion_id = opinion_id_created
-    #             self.repository.create_opinion(book)
-    #             self.repository.update_book(book)
-    #     self.repository.update_book(book, book_dto.opinion, book.opinion_id)
-        
-
-
-        
-                    
-
-
-
-
-
-
-
