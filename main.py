@@ -5,9 +5,11 @@ from service import Service
 from handler import Handler
 from flask import Flask
 from models import db
+from flask_migrate import Migrate
 
 
 load_dotenv()
+migrate = Migrate()
 
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
@@ -23,7 +25,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql://{DB_USER}:{DB_PASSWORD}@"\
 db.init_app(app)
 
 with app.app_context():
-    db.create_all()
+    migrate.init_app(app, db)
 
 
 
