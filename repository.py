@@ -1,53 +1,28 @@
 from models import Book
+from flask_sqlalchemy import SQLAlchemy
 import time
 
 
 class Repository:
     def __init__(self, db):
-        self.db = db
-    
-    def cursor_handler(func):
-        def decorator(self, *args, **kwargs):
-            if not self.db.is_connected():
-                self.db.reconnect()
-            cursor = self.db.cursor(dictionary=True)
-            result = func(self, cursor, *args, **kwargs)
-            cursor.close()
-            self.db.commit()
-            return result
-        return decorator
+        self.__db = db
 
-    @cursor_handler
-    def get_book_by_id(self, cursor, id) -> Book:
-        query = """SELECT * FROM book WHERE id = %s"""
-        query_args = (id, )
-        cursor.execute(query, query_args)
-        result = cursor.fetchone()     
-        if not result:
-            return None
-        return Book(result)  
+    def get_book_by_id(self, id) -> Book:
+        return self.__db.get_or_404(Book, id)
 
-    @cursor_handler
-    def create_book(self, cursor, book:Book):
-        query = """INSERT INTO book (title, author, grade, is_finished, opinion, genre) 
-                                         VALUES (%s,%s,%s,%s,%s,%s)"""
-        query_args = (book.title, book.author, book.grade, book.is_finished, book.opinion, book.genre)
-        cursor.execute(query, query_args)
+    def get_all_books(self) -> list:
+        return self.__db.session.execute(self.__db.select(Book))
 
-    @cursor_handler
-    def update_book(self, cursor, id, book:Book):
-        query = """UPDATE book SET title = %s,
-                                   author = %s,
-                                   genre = %s,
-                                   grade = %s,
-                                   opinion = %s,
-                                   is_finished = %s 
-                                    WHERE id= %s """
-        query_args = (book.title, book.author, book.genre, book.grade, book.opinion, book.is_finished, id)
-        cursor.execute(query, query_args)
+    def create_book(self, book: Book):
+        self.__db.session.add(book)
+        self.__db.session.commit()
+
+    def update_book(self):
+        self.__db.session.commit() 
    
-    @cursor_handler
-    def delete_book(self, cursor, id):
-        query = """DELETE FROM book WHERE id = %s """
-        query_args = (id, )
-        cursor.execute(query, query_args)
+    def delete_book(self, book: Book):
+        self.__db.session.delete(book)
+        self.__db.session.commit()       
+        
+        
+        
