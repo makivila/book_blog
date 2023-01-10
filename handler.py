@@ -2,7 +2,9 @@ import json
 from flask import Flask
 from service import Service
 from models import BookDTO
-from flask import request
+from flask import request, jsonify
+from marshmallow import ValidationError
+from validation_schemas import BookValidationSchema, ValidationResult
 
 
 class Handler:
@@ -16,23 +18,46 @@ class Handler:
         def get_book_by_id(id):
             book = self.service.get_book_by_id(id)
             if not book:
-                return 'Not found'
-            book_json = json.dumps(book.__dict__, ensure_ascii=False)
-            return book_json
+                return 'Not found', 404
+            return jsonify(book.__dict__)
 
-        @self.app.route('/create', methods=['POST'])
+        @self.app.route('/book/all/')
+        def get_all_books():
+            book_dicts = []
+            book_dtos = self.service.get_all_books()
+            if not book_dtos:
+                return 'Not found', 404
+            for book_dto in book_dtos:
+                book_dicts.append(book_dto.__dict__)
+            return jsonify(book_dicts)
+
+        @self.app.route('/book/', methods=['POST'])
         def create_book():
+            validation_result = self.validate(request.json)
+            if not validation_result.status:
+                return jsonify(validation_result.error_messages)
             book_dto = BookDTO(request.json)
             self.service.create_book(book_dto)
             return 'Book has added successfully'
 
-        @self.app.route('/update/<int:id>/', methods=['PUT'])
+        @self.app.route('/book/<int:id>/', methods=['PUT'])
         def update_book(id):
+            validation_result = self.validate(request.json)
+            if not validation_result.status:
+                return jsonify(validation_result.error_messages)
             book_dto = BookDTO(request.json)
             self.service.update_book(id, book_dto)
             return 'Book has updated'      
 
-        @self.app.route('/delete/<int:id>/', methods=['DELETE'])
+        @self.app.route('/book/<int:id>/', methods=['DELETE'])
         def delete_book(id):
             self.service.delete_book(id)
             return 'Book has deleted'      
+
+    def validate(self, json):
+        schema = BookValidationSchema()
+        try:
+            schema.load(json)
+            return ValidationResult(True)
+        except ValidationError as e:
+            return ValidationResult(False, e.messages)
