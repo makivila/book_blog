@@ -25,6 +25,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql://{DB_USER}:{DB_PASSWORD}@"\
 db.init_app(app)
 
 with app.app_context():
+    db.create_all()
     migrate.init_app(app, db)
 
 
@@ -35,4 +36,4 @@ handler = Handler(app, service)
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host="app")
